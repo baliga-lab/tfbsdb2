@@ -1,4 +1,6 @@
 /* TFBSDB2 database schema for MySQL */
+create database tfbsdb2;
+use tfbsdb2;
 
 /* Gene, location and name/id variants */
 create table if not exists genes (
