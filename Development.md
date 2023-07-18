@@ -16,7 +16,7 @@ TFBSDB2 is developed using services deployed in Docker containers
 https://earthly.dev/blog/docker-mysql/#using-container-networks
 
 ```
-$ docker network create tfbsdb2
+$ docker network create bridge
 ```
 
 We use a dedicated Docker network to stitch together our containers
@@ -28,18 +28,18 @@ We use a dedicated Docker network to stitch together our containers
 Hostname mysql
 
 ```
-$ docker run --name mysql -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network tfbsdb2 -d mysql:latest
+$ docker run --name mysql -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network bridge -d mysql:latest
 ```
   or
 
 ```
-$ docker run --name mysql -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network tfbsdb2 --restart unless-stopped mysql:latest
+$ docker run --name mysql -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network bridge --restart unless-stopped mysql:latest
 ```
 
 We can see the container by
 
 ```
-$ docker network inspect tfbsdb2
+$ docker network inspect bridge
 ```
 
 ### Populate database
@@ -78,5 +78,13 @@ $ docker build -t tfbsdb2 .
 ```
 
 ```
-docker run -p 5000:5000 --network tfbsdb2 tfbsdb2
+docker run -p 5000:5000 --network bridge tfbsdb2
 ```
+
+## Pitfalls
+
+creating Docker networks can cause problems with IT security.
+
+E.g. at ISB we use network "bridge"
+
+"172.17"
