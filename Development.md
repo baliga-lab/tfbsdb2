@@ -28,7 +28,7 @@ We use a dedicated Docker network to stitch together our containers
 Hostname mysql
 
 ```
-$ docker run --name mysql -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network bridge -d mysql:latest
+$ docker run --name mysql -e MYSQL_ROOT_PASSWORD=tfbsdb2 --network bridge -d mysql:5.7
 ```
   or
 
@@ -88,3 +88,5 @@ creating Docker networks can cause problems with IT security.
 E.g. at ISB we use network "bridge"
 
 "172.17"
+mysql --host 172.17.0.2 -u root -p tfbsdb2
+
