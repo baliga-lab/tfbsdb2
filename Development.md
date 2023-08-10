@@ -90,3 +90,40 @@ E.g. at ISB we use network "bridge"
 "172.17"
 mysql --host 172.17.0.2 -u root -p tfbsdb2
 
+
+## Solr Server
+
+To create the Solr core
+
+```
+$ bin/solr create -c tfbsdb2
+```
+
+Add this to solrconfig.xml to enable auto suggester
+
+```
+  <!-- AutoSuggester component -->
+  <searchComponent name="suggest" class="solr.SuggestComponent">
+    <lst name="suggester">
+      <str name="name">mySuggester</str>
+      <str name="lookupImpl">FuzzyLookupFactory</str>
+      <str name="dictionaryImpl">DocumentDictionaryFactory</str>
+      <str name="field">names</str>
+      <str name="suggestAnalyzerFieldType">string</str>
+      <str name="buildOnStartup">false</str>
+    </lst>
+  </searchComponent>
+  <requestHandler name="/suggest" class="solr.SearchHandler" startup="lazy">
+    <lst name="defaults">
+      <str name="suggest">true</str>
+      <str name="suggest.count">10</str>
+    </lst>
+    <arr name="components">
+      <str>suggest</str>
+    </arr>
+  </requestHandler>
+```
+
+### Post document to Solr
+
+bin/post -c tfbsdb2 document.xml

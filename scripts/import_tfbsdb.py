@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""
+Import TFBSDB data from a PostgresDump in JSON format
+"""
 import mysql.connector
 import os
 import json
@@ -107,6 +110,6 @@ FOLDER = '../legacy_data'
 if __name__ == '__main__':
     conn = dbconn()
     import_genes(conn, os.path.join(FOLDER, 'genes.json'))
-    import_motifs(conn, os.path.join(FOLDER, 'motifs.json'))
-    import_tfbs(conn, os.path.join(FOLDER, 'tfbs.json'))
+    #import_motifs(conn, os.path.join(FOLDER, 'motifs.json'))
+    #import_tfbs(conn, os.path.join(FOLDER, 'tfbs.json'))
     conn.close()

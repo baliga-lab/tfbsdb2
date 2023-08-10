@@ -59,3 +59,6 @@ create table if not exists gene_motifs (
   gene_id integer not null references genes,
   motif_id integer not null references motifs
 );
+
+insert into motif_databases (id, name) values (1, 'selex');
+insert into motif_databases (id, name) values (2, 'jaspar');
