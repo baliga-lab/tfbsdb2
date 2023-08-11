@@ -68,36 +68,44 @@ g.orientation,g.tss from tf_binding_sites tfbs join genes g on tfbs.gene_id=g.id
     return jsonify(database=motif_database, pssm=pssm, target_genes=target_genes)
 
 
-@app.route("/gene_info/<entrez>")
-def gene_info(entrez):
+@app.route("/gene_info/<gene_id>")
+def gene_info(gene_id):
     conn = dbconn()
     cursor = conn.cursor()
-    cursor.execute("""select id,chromosome,start_promoter,stop_promoter,orientation,tss,description
-from genes where entrez_id=%s""", [entrez])
-    gene_pk, chrom, start_prom, stop_prom, orient, tss, desc = cursor.fetchone()
+    cursor.execute("""select entrez_id,chromosome,start_promoter,stop_promoter,orientation,tss,description
+from genes where id=%s""", [gene_id])
+    entrez, chrom, start_prom, stop_prom, orient, tss, desc = cursor.fetchone()
 
     synonyms = []
-    cursor.execute('select name,synonym_type from gene_synonyms where gene_id=%s', [gene_pk])
+    cursor.execute('select name,synonym_type from gene_synonyms where gene_id=%s', [gene_id])
     for name, syn_type in cursor.fetchall():
         synonyms.append({'name': name, 'type': syn_type})
+    cursor.close()
+    conn.close()
+    return jsonify(entrez=entrez, chromosome=chrom, start_promoter=start_prom,
+                   stop_promoter=stop_prom, orientation=orient, tss=tss,
+                   description=desc, synonyms=synonyms)
 
+@app.route("/gene_tf_binding_sites/<gene_id>")
+def gene_tf_binding_sites(gene_id):
+    conn = dbconn()
+    cursor = conn.cursor()
     # TF binding sites
-    cursor.execute("""select m.name,mdb.name,start,stop,orientation,p_value,match_sequence
+    cursor.execute("""select m.id,m.name,mdb.name,start,stop,orientation,p_value,match_sequence
 from tf_binding_sites tfbs join motifs m on tfbs.motif_id=m.id
 join motif_databases mdb on m.motif_database_id=mdb.id
-where gene_id=%s order by m.name""", [gene_pk])
+where gene_id=%s order by m.name""", [gene_id])
     binding_sites = []
-    for motif, motif_db, start, stop, orient, pval, seq in cursor.fetchall():
+    for motif_id, motif, motif_db, start, stop, orient, pval, seq in cursor.fetchall():
         binding_sites.append({
+            "motif_id": motif_id,
             "motif": motif, "motif_database": motif_db,
             "start": start, "stop": stop, "strand": orient,
             "p_value": pval, "match_sequence": seq
         })
     cursor.close()
     conn.close()
-    return jsonify(entrez=entrez, chromosome=chrom, start_promoter=start_prom,
-                   stop_promoter=stop_prom, orientation=orient, tss=tss,
-                   description=desc, synonyms=synonyms, tf_binding_sites=binding_sites)
+    return jsonify(tf_binding_sites=binding_sites)
 
 
 @app.route('/search/<term>')
