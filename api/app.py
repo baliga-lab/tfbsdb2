@@ -18,9 +18,9 @@ def dbconn():
 def motifs():
     conn = dbconn()
     cursor = conn.cursor()
-    cursor.execute('select m.name,db.name from motifs m join motif_databases db on m.motif_database_id=db.id order by m.name')
+    cursor.execute('select m.id,m.name,db.name from motifs m join motif_databases db on m.motif_database_id=db.id order by m.name')
 
-    motifs = [{"name": motif_name, "db": motif_db} for motif_name, motif_db in cursor.fetchall()]
+    motifs = [{"id": motif_id, "name": motif_name, "db": motif_db} for motif_id, motif_name, motif_db in cursor.fetchall()]
     return jsonify(motifs=motifs)
 
 
@@ -28,9 +28,10 @@ def motifs():
 def genes():
     conn = dbconn()
     cursor = conn.cursor()
-    cursor.execute('select entrez_id,description,chromosome,start_promoter,stop_promoter,tss,orientation from genes order by entrez_id')
+    cursor.execute('select id,entrez_id,description,chromosome,start_promoter,stop_promoter,tss,orientation from genes order by entrez_id')
 
     genes = [{
+        "id": gene_id,
         "entrez": entrez,
         "description": desc,
         "chromosome": chrom,
@@ -38,7 +39,7 @@ def genes():
         "stop_promoter": stop_prom,
         "tss": tss,
         "strand": strand
-    } for entrez, desc, chrom, start_prom, stop_prom, tss, strand in cursor.fetchall()]
+    } for gene_id, entrez, desc, chrom, start_prom, stop_prom, tss, strand in cursor.fetchall()]
     return jsonify(genes=genes)
 
 @app.route("/motif_info/<name>")
@@ -107,6 +108,24 @@ where gene_id=%s order by m.name""", [gene_id])
     conn.close()
     return jsonify(tf_binding_sites=binding_sites)
 
+
+@app.route("/motif_target_genes/<motif_id>")
+def motif_target_genes(motif_id):
+    conn = dbconn()
+    cursor = conn.cursor()
+    cursor.execute("""select distinct g.id,g.entrez_id,g.description,g.chromosome,g.orientation,g.start_promoter,g.stop_promoter,g.tss,count(tfbs.id) from genes g join tf_binding_sites tfbs on g.id=tfbs.gene_id join motifs m on m.id=tfbs.motif_id where m.id=%s group by g.id order by g.entrez_id""", [motif_id])
+    target_genes = []
+    for gene_id, entrez, desc, chrom, strand, prom_start, prom_stop, tss, num_sites in cursor.fetchall():
+        target_genes.append({
+            "gene_id": gene_id,
+            "entrez_id": entrez, "description": desc,
+            "chromosome": chrom, "strand": strand,
+            "promoter_start": prom_start, "promoter_stop": prom_stop,
+            "tss": tss, "num_sites": num_sites
+        })
+    cursor.close()
+    conn.close()
+    return jsonify(target_genes=target_genes)
 
 @app.route('/search/<term>')
 def simple_search(term):
