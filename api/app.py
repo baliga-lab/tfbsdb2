@@ -134,17 +134,14 @@ def simple_search(term):
     return jsonify(results=result, num_results=len(result), total=total, start=start)
 
 
-@app.route('/autocomplete/<search_term>')
+@app.route('/completions/<search_term>')
 def autocomplete(search_term):
-    """
-    http://localhost:8983/solr/halodata/suggest?suggest=true&suggest.build=true&suggest.dictionary=mySuggester&wt=json&suggest.q=VNG000    """
     solr_url = app.config['SOLR_SUGGEST_URL']
     solr_url += 'suggest.q=' + search_term
     print(solr_url)
     r = requests.get(solr_url)
     solr_result = r.json()
     suggest_result = solr_result['suggest']['mySuggester'][search_term]
-    #count = suggest_result['num_found']
     entries = []
     terms_set = set()
     for s in suggest_result['suggestions']:
@@ -152,9 +149,8 @@ def autocomplete(search_term):
         terms = term.split(',')
         for t in terms:
             terms_set.add(t)
-    entries = [{'Description': t} for t in sorted(terms_set)]
-    count = len(entries)
-    return jsonify(count=count, entries=entries)
+    count = len(terms_set)
+    return jsonify(count=count, completions=sorted(terms_set))
 
 
 @app.route("/summary", methods=["GET"])
