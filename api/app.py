@@ -14,6 +14,10 @@ def dbconn():
                                    database=app.config['DATABASE_NAME'])
 
 
+@app.route("/info")
+def info():
+    return jsonify(info="I exist !")
+
 @app.route("/motifs")
 def motifs():
     conn = dbconn()
@@ -126,6 +130,23 @@ def motif_target_genes(motif_id):
     cursor.close()
     conn.close()
     return jsonify(target_genes=target_genes)
+
+
+@app.route("/motif_pssm/<motif_id>")
+def motif_pssm(motif_id):
+    conn = dbconn()
+    cursor = conn.cursor()
+    cursor.execute("""select row_index,a,c,g,t from pssms where motif_id=%s order by row_index""", [motif_id])
+    pssm_rows = []
+    for row_index, a, c, g, t in cursor.fetchall():
+        pssm_rows.append({
+            "row_index": row_index,
+            "a": a, "c": c, "g": g, "t": t
+        })
+    cursor.close()
+    conn.close()
+    return jsonify(pssm=pssm_rows)
+
 
 @app.route('/search/<term>')
 def simple_search(term):
