@@ -4,6 +4,7 @@ import mysql.connector
 import requests
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_envvar('APP_SETTINGS')
 
 
