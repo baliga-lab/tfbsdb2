@@ -146,6 +146,28 @@ def motif_target_genes(motif_id):
     return jsonify(target_genes=target_genes)
 
 
+@app.route("/motif_tfs/<motif_id>")
+def motif_tfs(motif_id):
+    conn = dbconn()
+    cursor = conn.cursor()
+    cursor_inner = conn.cursor()
+    cursor.execute("""select distinct g.id,g.entrez_id,g.description,g.chromosome,g.orientation,g.start_promoter,g.stop_promoter,g.tss from genes g join gene_motifs gm on g.id=gm.gene_id join motifs m on m.id=gm.motif_id where m.id=%s""", [motif_id])
+    tfs = []
+    for gene_id, entrez, desc, chrom, strand, prom_start, prom_stop, tss in cursor.fetchall():
+        cursor_inner.execute('select name from gene_synonyms where gene_id=%s', [gene_id])
+        synonyms = [row[0] for row in cursor.fetchall()]
+        tfs.append({
+            "gene_id": gene_id,
+            "synonyms": ', '.join(synonyms),
+            "entrez_id": entrez, "description": desc,
+            "chromosome": chrom, "strand": strand,
+            "promoter_start": prom_start, "promoter_stop": prom_stop,
+            "tss": tss
+        })
+    cursor.close()
+    conn.close()
+    return jsonify(tfs=tfs)
+
 @app.route("/motif_pssm/<motif_id>")
 def motif_pssm(motif_id):
     conn = dbconn()
