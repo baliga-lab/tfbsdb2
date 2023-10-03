@@ -33,10 +33,11 @@ def motifs():
 def genes():
     conn = dbconn()
     cursor = conn.cursor()
-    cursor.execute('select id,entrez_id,description,chromosome,start_promoter,stop_promoter,tss,orientation from genes order by entrez_id')
+    cursor.execute('select g.id,s.name,entrez_id,description,chromosome,start_promoter,stop_promoter,tss,orientation from genes g join gene_synonyms s on s.gene_id=g.id order by entrez_id')
 
     genes = [{
         "id": gene_id,
+        "synonyms": synonyms,
         "entrez": entrez,
         "description": desc,
         "chromosome": chrom,
@@ -44,7 +45,7 @@ def genes():
         "stop_promoter": stop_prom,
         "tss": tss,
         "strand": strand
-    } for gene_id, entrez, desc, chrom, start_prom, stop_prom, tss, strand in cursor.fetchall()]
+    } for gene_id, synonyms,entrez, desc, chrom, start_prom, stop_prom, tss, strand in cursor.fetchall()]
     return jsonify(genes=genes)
 
 @app.route("/motif_info/<name>")
