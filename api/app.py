@@ -67,7 +67,7 @@ g.orientation,g.tss from tf_binding_sites tfbs join genes g on tfbs.gene_id=g.id
         target_genes.append({'entrez': entrez, 'num_sites': num_sites,
                              'chromosome': chrom,
                              'start_promoter': start_prom, 'stop_promoter': stop_prom,
-                             'strang': orient,
+                             'strand': orient,
                              'tss': tss})
     cursor.close()
     conn.close()
@@ -91,6 +91,19 @@ from genes where id=%s""", [gene_id])
     return jsonify(entrez=entrez, chromosome=chrom, start_promoter=start_prom,
                    stop_promoter=stop_prom, orientation=orient, tss=tss,
                    description=desc, synonyms=synonyms)
+
+
+@app.route("/motif_shortinfo/<motif_id>")
+def motif_shortinfo(motif_id):
+    conn = dbconn()
+    cursor = conn.cursor()
+    cursor.execute("""select m.name as motif_name, mdb.name as db_name from motifs m join motif_databases mdb on m.motif_database_id=mdb.id where m.id=%s""", [motif_id])
+    motif_name, motif_database = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+    return jsonify(motif_name=motif_name, motif_database=motif_database)
+
 
 @app.route("/gene_tf_binding_sites/<gene_id>")
 def gene_tf_binding_sites(gene_id):

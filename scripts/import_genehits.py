@@ -59,7 +59,7 @@ def import_motifhits(conn, path, invalid_motif_file, invalid_genes_file):
         strands = row['Strands'].split(';')
         fimo_pvals = row['FIMO P-values']
         try:
-            fimo_pvals.split(';')
+            fimo_pvals = fimo_pvals.split(';')
         except AttributeError:
             print("FIMO pvals: '%s'" % fimo_pvals)
             fimo_pvals = [fimo_pvals]
