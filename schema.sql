@@ -60,5 +60,12 @@ create table if not exists gene_motifs (
   motif_id integer not null references motifs
 );
 
+create table if not exists tf_to_target_gene (
+  tf_id integer not null references genes,
+  target_gene_id integer not null references genes
+);
+
 insert into motif_databases (id, name) values (1, 'selex');
 insert into motif_databases (id, name) values (2, 'jaspar');
+insert into motif_databases (id, name) values (3, 'uniprobe');
+insert into motif_databases (id, name) values (4, 'transfac');

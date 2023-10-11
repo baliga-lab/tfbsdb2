@@ -22,18 +22,17 @@ def dbconn():
 
 DESCRIPTION = """import_motifs.py - import motifs from pickle files"""
 
+MOTIFDB_IDS = {
+    "selex": 1, "jaspar": 2, "uniprobe": 3, "transfac": 4
+}
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=DESCRIPTION)
     parser.add_argument('infile', help='pkl file containing the PSSMS')
     parser.add_argument('dbname', help='database name')
     args = parser.parse_args()
-    if args.dbname == 'selex':
-        mdb_id = 1
-    elif args.dbname == 'jaspar':
-        mdb_id = 2
-    else:
-        raise Exception('Unknown database')
+    mdb_id = MOTIFDB_IDS[args.dbname]
 
     conn = dbconn()
     cursor = conn.cursor()
@@ -44,10 +43,11 @@ if __name__ == '__main__':
         pssm_names = sorted(pssms.keys())
         for name in pssm_names:
             pssm = pssms[name]
+            pssm_name = name.replace('$', '_')  # buggy inconsistent name for transfac
             row_idx = 1
-            cursor.execute('insert into motifs (motif_database_id, name) values (%s,%s)', [mdb_id, name])
+            cursor.execute('insert into motifs (motif_database_id, name) values (%s,%s)', [mdb_id, pssm_name])
             motif_pk = cursor.lastrowid
-            print("PSSM '%s' #sites: %s evalue: %s" % (pssm.name, pssm.nsites, pssm.eValue))
+            print("PSSM '%s' #sites: %s evalue: %s" % (pssm_name, pssm.nsites, pssm.eValue))
             for a,c,g,t in pssm.matrix:
                 # ACGT
                 #print('%.2f %.2f %.2f %.2f' % (a, c, g, t))
