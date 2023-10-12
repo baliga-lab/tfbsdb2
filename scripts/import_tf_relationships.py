@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
     missing_genes = set()
     missing_tfs = set()
+    tf_genes = set()
 
     success = 0
     tfs_found = 0
@@ -66,14 +67,7 @@ if __name__ == '__main__':
 
         motif_id = motif_ids[motif_name]
 
-        # 1. import tf to target gene
-        cursor.execute('select count(*) from tf_to_target_gene where tf_id=%s and target_gene_id=%s',
-                       [tf_id, target_gene_id])
-        if cursor.fetchone()[0] == 0:  # insert new
-            cursor.execute('insert into tf_to_target_gene (tf_id,target_gene_id) values (%s,%s)',
-                           [tf_id, target_gene_id])
-
-        # 2. import tf binding sites
+        # import tf binding sites
         # multiple, semicolon separated hits
         strands = row['Strand'].split(';')
         locations = row['Location'].split(';')
@@ -82,8 +76,8 @@ if __name__ == '__main__':
         num_instances = len(locations)
         for i in range(num_instances):
             start, stop = locations[i].split('-')
-            cursor.execute('insert into tf_binding_sites (gene_id,motif_id,start,stop,orientation,p_value,match_sequence) values (%s,%s,%s,%s,%s,%s,%s)',
-                           [gene_id, motif_id, start, stop, strands[i], fimo_pvals[i], match_seqs[i]])
+            cursor.execute('insert into tf_binding_sites (tf_id,gene_id,motif_id,start,stop,orientation,p_value,match_sequence) values (%s,%s,%s,%s,%s,%s,%s,%s)',
+                           [tf_id, gene_id, motif_id, start, stop, strands[i], fimo_pvals[i], match_seqs[i]])
         #success += 1
     conn.commit()
 

@@ -87,11 +87,23 @@ from genes where id=%s""", [gene_id])
     cursor.execute('select name,synonym_type from gene_synonyms where gene_id=%s', [gene_id])
     for name, syn_type in cursor.fetchall():
         synonyms.append({'name': name, 'type': syn_type})
+    cursor.execute('select count(*) from tf_binding_sites where gene_id=%s', [gene_id])
+    is_tf = cursor.fetchone()[0] > 0  # Transcription factor ??
+    num_regulated = 0
+    cursor.execute('select count(*) from tf_binding_sites where gene_id=%s', [gene_id])
+    num_tfs_regulated_by = cursor.fetchone()[0]
+    if is_tf:
+        # add additional information for the TF
+        cursor.execute('select count(*) from tf_binding_sites where tf_id=%s', [gene_id])
+        num_regulated = cursor.fetchone()[0]
+
     cursor.close()
     conn.close()
     return jsonify(entrez=entrez, chromosome=chrom, start_promoter=start_prom,
                    stop_promoter=stop_prom, orientation=orient, tss=tss,
-                   description=desc, synonyms=synonyms)
+                   description=desc, synonyms=synonyms, is_tf=is_tf,
+                   num_tfs_regulated_by=num_tfs_regulated_by,
+                   num_regulated=num_regulated)
 
 
 @app.route("/motif_shortinfo/<motif_id>")
@@ -108,6 +120,7 @@ def motif_shortinfo(motif_id):
 
 @app.route("/gene_tf_binding_sites/<gene_id>")
 def gene_tf_binding_sites(gene_id):
+    """Participating in binding sites through the gene_id attribute (regulated by)"""
     conn = dbconn()
     cursor = conn.cursor()
     # TF binding sites
