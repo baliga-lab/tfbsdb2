@@ -147,7 +147,7 @@ def regulates(tf_id):
     conn = dbconn()
     cursor = conn.cursor()
     # TF binding sites
-    cursor.execute("""select distinct tfbs.gene_id,entrez_id,gs.name as gene_name,motif_id,m.name as motif,mdb.name as motifdb,count(match_sequence) from tf_binding_sites tfbs join motifs m on m.id=tfbs.motif_id join motif_databases mdb on mdb.id=m.motif_database_id join genes g on g.id=tfbs.gene_id left outer join gene_synonyms gs on gs.gene_id=tfbs.gene_id where tf_id=%s group by gene_id,motif_id""", [tf_id])
+    cursor.execute("""select distinct tfbs.gene_id,entrez_id,gs.name as gene_name,motif_id,m.name as motif,mdb.name as motifdb,count(match_sequence) from tf_binding_sites tfbs join motifs m on m.id=tfbs.motif_id join motif_databases mdb on mdb.id=m.motif_database_id join genes g on g.id=tfbs.gene_id left outer join gene_synonyms gs on gs.gene_id=tfbs.gene_id where tf_id=%s group by gene_id,motif_id,gs.name""", [tf_id])
     result = []
     for gene_id, entrez_id, gene_name, motif_id, motif_name, mdb_name, num_sites in cursor.fetchall():
         result.append({
