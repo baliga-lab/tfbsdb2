@@ -118,8 +118,8 @@ def motif_shortinfo(motif_id):
     return jsonify(motif_name=motif_name, motif_database=motif_database)
 
 
-@app.route("/gene_tf_binding_sites/<gene_id>")
-def gene_tf_binding_sites(gene_id):
+@app.route("/regulated_by/<gene_id>")
+def regulated_by(gene_id):
     """Participating in binding sites through the gene_id attribute (regulated by)"""
     conn = dbconn()
     cursor = conn.cursor()
@@ -139,6 +139,27 @@ where gene_id=%s order by m.name""", [gene_id])
     cursor.close()
     conn.close()
     return jsonify(tf_binding_sites=binding_sites)
+
+
+@app.route("/regulates/<tf_id>")
+def regulates(tf_id):
+    """Participating in binding sites through the tf_id attribute (regulates)"""
+    conn = dbconn()
+    cursor = conn.cursor()
+    # TF binding sites
+    cursor.execute("""select distinct tfbs.gene_id,entrez_id,gs.name as gene_name,motif_id,m.name as motif,mdb.name as motifdb,count(match_sequence) from tf_binding_sites tfbs join motifs m on m.id=tfbs.motif_id join motif_databases mdb on mdb.id=m.motif_database_id join genes g on g.id=tfbs.gene_id left outer join gene_synonyms gs on gs.gene_id=tfbs.gene_id where tf_id=%s group by gene_id,motif_id""", [tf_id])
+    result = []
+    for gene_id, entrez_id, gene_name, motif_id, motif_name, mdb_name, num_sites in cursor.fetchall():
+        result.append({
+            "motif_id": motif_id, "motif": motif_name,
+            "motif_database": mdb_name,
+            "gene_id": gene_id, "entrez_id": entrez_id,
+            "gene_name": gene_name,
+            "num_sites": num_sites
+        })
+    cursor.close()
+    conn.close()
+    return jsonify(result=result)
 
 
 @app.route("/motif_target_genes/<motif_id>")
